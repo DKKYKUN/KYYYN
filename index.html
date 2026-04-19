@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESP32 Air & Vital Monitor</title>
+  <meta name="description" content="Dashboard realtime kualitas udara dan vital sign dari ESP32" />
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <i class="ph ph-activity" style="color:#fff"></i>
+      </div>
+      <div>
+        <div class="logo-title">ESP32 Monitor</div>
+        <div class="logo-sub">Air &amp; Vital Signs</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-btn active-nav" id="btn-dashboard" onclick="switchTab('dashboard')">
+        <i class="ph ph-squares-four"></i> Dashboard
+      </button>
+      <button class="nav-btn inactive-nav" id="btn-history" onclick="switchTab('history')">
+        <i class="ph ph-clock-counter-clockwise"></i> Riwayat
+      </button>
+      <button class="nav-btn inactive-nav" id="btn-about" onclick="switchTab('about')">
+        <i class="ph ph-info"></i> Tentang
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="audio-row">
+        <span class="audio-label">Suara Alert</span>
+        <button class="audio-btn" id="toggle-audio" title="Toggle suara alert">
+          <i class="ph ph-speaker-slash" id="audio-icon"></i>
+        </button>
+      </div>
+      <div class="conn-badge">
+        <div class="dot-wrap">
+          <span class="ping ping-red" id="status-ping"></span>
+          <span class="dot dot-red"   id="status-dot"></span>
+        </div>
+        <div>
+          <div class="conn-label red" id="conn-status">Menghubungkan…</div>
+          <div id="data-source">Supabase Realtime</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <h2 id="page-title">Real-time Overview</h2>
+      <div class="topbar-right">
+        <span id="last-update"></span>
+        <span class="status-bar" id="status-bar"></span>
+        <span class="mq-note">
+          <i class="ph ph-warning-circle"></i>
+          <span>Nilai MQ-135 adalah estimasi relatif</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- ======================================================
+         VIEW: DASHBOARD
+         Kartu sensor + grafik mini di dalam tiap kartu
+         TERPISAH dari view lain (masing-masing fullscreen)
+    ====================================================== -->
+    <div class="view-panel" id="view-dashboard">
+      <div class="content" id="content-dashboard">
+        <div id="cards-container"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         VIEW: RIWAYAT  (halaman penuh sendiri)
+    ====================================================== -->
+    <div class="view-panel view-hidden" id="view-history">
+      <div class="content" id="content-history">
+        <div class="section-header">
+          <i class="ph ph-clock-counter-clockwise"></i>
+          <span>Riwayat Data Sensor</span>
+          <small id="history-count"></small>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead id="history-head"></thead>
+              <tbody id="history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         VIEW: TENTANG  (halaman penuh sendiri)
+    ====================================================== -->
+    <div class="view-panel view-hidden" id="view-about">
+      <div class="content" id="content-about">
+        <div class="section-header">
+          <i class="ph ph-info"></i>
+          <span>Tentang Sistem</span>
+        </div>
+        <div class="about-grid">
+
+          <div class="about-card">
+            <h3><i class="ph ph-cpu"></i> Hardware</h3>
+            <ul>
+              <li><strong>MCU</strong>     <span>ESP32 (Dual Core 240 MHz)</span></li>
+              <li><strong>Gas</strong>     <span>MQ-135 (8 parameter)</span></li>
+              <li><strong>Env</strong>     <span>DHT11 (suhu &amp; kelembaban)</span></li>
+              <li><strong>Vital</strong>   <span>MAX30102 (HR &amp; SpO₂)</span></li>
+              <li><strong>Display</strong> <span>OLED 0.96" SSD1306 I²C</span></li>
+              <li><strong>Buzzer</strong>  <span>Aktif saat kondisi bahaya</span></li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3><i class="ph ph-cloud"></i> Backend</h3>
+            <ul>
+              <li><strong>Database</strong>  <span>Supabase (PostgreSQL)</span></li>
+              <li><strong>API</strong>       <span>Supabase REST v1</span></li>
+              <li><strong>Auth</strong>      <span>Anon Key (RLS disabled)</span></li>
+              <li><strong>Kirim</strong>     <span>Setiap 10 detik dari ESP32</span></li>
+              <li><strong>Hapus</strong>     <span>Auto-delete tiap 3 menit (pg_cron)</span></li>
+              <li><strong>Poll web</strong>  <span>Setiap 5 detik dari browser</span></li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3><i class="ph ph-flask"></i> Parameter Gas (MQ-135)</h3>
+            <ul>
+              <li><strong>CO₂</strong>     <span>Karbon dioksida — Bahaya &gt;1000 ppm</span></li>
+              <li><strong>CO</strong>      <span>Karbon monoksida — Bahaya &gt;50 ppm</span></li>
+              <li><strong>NH₃</strong>     <span>Amonia — Bahaya &gt;50 ppm</span></li>
+              <li><strong>Smoke</strong>   <span>Asap — Bahaya &gt;500 ppm</span></li>
+              <li><strong>Benzene</strong> <span>Senyawa aromatik — Bahaya &gt;5 ppm</span></li>
+              <li><strong>Alkohol</strong> <span>Uap alkohol — Bahaya &gt;800 ppm</span></li>
+              <li><strong>NOₓ</strong>     <span>Nitrogen oksida — Bahaya &gt;1 ppm</span></li>
+              <li><strong>SO₂</strong>     <span>Sulfur dioksida — Bahaya &gt;5 ppm</span></li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3><i class="ph ph-heart-pulse"></i> Vital Signs (MAX30102)</h3>
+            <ul>
+              <li><strong>HR Normal</strong>   <span>60–100 BPM</span></li>
+              <li><strong>HR Lambat</strong>   <span>&lt;60 BPM (bradikardi)</span></li>
+              <li><strong>HR Tinggi</strong>   <span>&gt;100 BPM (takikardi)</span></li>
+              <li><strong>SpO₂ Normal</strong> <span>≥ 95%</span></li>
+              <li><strong>SpO₂ Rendah</strong> <span>&lt;90% → darurat</span></li>
+              <li><strong>Deteksi jari</strong><span>IR threshold &gt; 50.000</span></li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3><i class="ph ph-palette"></i> Legenda Warna</h3>
+            <ul>
+              <li>
+                <span class="legend-dot" style="background:var(--green)"></span>
+                <strong>Hijau</strong> <span>Normal / Aman</span>
+              </li>
+              <li>
+                <span class="legend-dot" style="background:var(--yellow)"></span>
+                <strong>Kuning</strong> <span>Perhatian / Peringatan</span>
+              </li>
+              <li>
+                <span class="legend-dot" style="background:var(--orange)"></span>
+                <strong>Oranye</strong> <span>Bahaya — Tindakan diperlukan</span>
+              </li>
+              <li>
+                <span class="legend-dot" style="background:var(--red)"></span>
+                <strong>Merah</strong> <span>Kritis — Segera evakuasi!</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3><i class="ph ph-code"></i> Teknologi</h3>
+            <ul>
+              <li><strong>Firmware</strong> <span>Arduino C++ (ESP32)</span></li>
+              <li><strong>Libraries</strong><span>MQUnifiedsensor, DHT, SparkFun MAX3010x, SSD1306</span></li>
+              <li><strong>Web</strong>      <span>HTML5 · CSS3 · Vanilla JS</span></li>
+              <li><strong>Grafik</strong>   <span>Chart.js 4.4</span></li>
+              <li><strong>Ikon</strong>     <span>Phosphor Icons</span></li>
+              <li><strong>Hosting</strong>  <span>Vercel (static)</span></li>
+            </ul>
+          </div>
+
+        </div><!-- /about-grid -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script src="js/config.js"></script>
+  <script src="js/sensors.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
