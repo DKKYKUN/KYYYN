@@ -117,7 +117,7 @@ const SENSORS = [
     thresholds: [
       { max: 0.02, label: 'Aman',    level: 0, cls: 'good'        },
       { max: 0.1, label: 'Sedang',  level: 1, cls: 'warn-yellow' },
-      { max: 0,3,   label: 'Bahaya',  level: 2, cls: 'warn-orange' },
+      { max: 0.2,   label: 'Bahaya',  level: 2, cls: 'warn-orange' },
       { max: 999, label: 'Kritis',  level: 3, cls: 'danger'      },
     ],
   },
