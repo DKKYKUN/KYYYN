@@ -33,7 +33,7 @@ const SENSORS = [
     icon: 'thermometer', group: 'env',
     thresholds: [
       { max: 19,  label: 'Dingin',   level: 1, cls: 'info'        },
-      { max: 26,  label: 'Nyaman',   level: 0, cls: 'good'        },
+      { max: 32,  label: 'Nyaman',   level: 0, cls: 'good'        },
       { max: 35,  label: 'Hangat',   level: 1, cls: 'warn-yellow' },
       { max: 40,  label: 'Panas',    level: 2, cls: 'warn-orange' },
       { max: 999, label: 'Sangat Panas', level: 3, cls: 'danger'  },
