@@ -115,8 +115,8 @@ const SENSORS = [
     id: 'nox',        name: 'NOₓ',         unit: 'ppm',
     icon: 'warning-diamond', group: 'gas',
     thresholds: [
-      { max: 0.15, label: 'Aman',    level: 0, cls: 'good'        },
-      { max: 0.2, label: 'Sedang',  level: 1, cls: 'warn-yellow' },
+      { max: 0.5, label: 'Aman',    level: 0, cls: 'good'        },
+      { max: 0.4, label: 'Sedang',  level: 1, cls: 'warn-yellow' },
       { max: 0.3,   label: 'Bahaya',  level: 2, cls: 'warn-orange' },
       { max: 999, label: 'Kritis',  level: 3, cls: 'danger'      },
     ],
