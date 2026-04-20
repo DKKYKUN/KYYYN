@@ -44,7 +44,7 @@ const SENSORS = [
     icon: 'cloud-rain', group: 'env',
     thresholds: [
       { max: 40,  label: 'Kering',   level: 1, cls: 'warn-yellow' },
-      { max: 75,  label: 'Ideal',    level: 0, cls: 'good'        },
+      { max: 76,  label: 'Ideal',    level: 0, cls: 'good'        },
       { max: 80,  label: 'Lembab',   level: 1, cls: 'warn-yellow' },
       { max: 100, label: 'Basah',    level: 2, cls: 'warn-orange' },
     ],
