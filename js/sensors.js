@@ -43,8 +43,8 @@ const SENSORS = [
     id: 'humidity',   name: 'Kelembaban',  unit: '%',
     icon: 'cloud-rain', group: 'env',
     thresholds: [
-      { max: 29,  label: 'Kering',   level: 1, cls: 'warn-yellow' },
-      { max: 60,  label: 'Ideal',    level: 0, cls: 'good'        },
+      { max: 40,  label: 'Kering',   level: 1, cls: 'warn-yellow' },
+      { max: 75,  label: 'Ideal',    level: 0, cls: 'good'        },
       { max: 80,  label: 'Lembab',   level: 1, cls: 'warn-yellow' },
       { max: 100, label: 'Basah',    level: 2, cls: 'warn-orange' },
     ],
@@ -55,10 +55,10 @@ const SENSORS = [
     id: 'co2',        name: 'CO₂',         unit: 'ppm',
     icon: 'cloud', group: 'gas',
     thresholds: [
-      { max: 999,  label: 'Baik',    level: 0, cls: 'good'        },
-      { max: 1499, label: 'Sedang',  level: 1, cls: 'warn-yellow' },
-      { max: 1999, label: 'Bahaya',  level: 2, cls: 'warn-orange' },
-      { max: 9999, label: 'Kritis',  level: 3, cls: 'danger'      },
+      { max: 450,  label: 'Baik',    level: 0, cls: 'good'        },
+      { max: 1000, label: 'Sedang',  level: 1, cls: 'warn-yellow' },
+      { max: 2000, label: 'Bahaya',  level: 2, cls: 'warn-orange' },
+      { max: 3000, label: 'Kritis',  level: 3, cls: 'danger'      },
     ],
   },
   {
